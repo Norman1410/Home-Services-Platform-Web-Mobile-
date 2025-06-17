@@ -9,7 +9,7 @@ import DetalleTrabajador from './pages/DetalleTrabajador'
 import Registro from './pages/Registro'
 import RutaProtegida from './components/RutaProtegida'
 import Trabajos from './pages/Trabajos'
-
+//Componente principal de la aplicación que maneja las rutas y el estado del usuario
 function App() {
   const [usuario, setUsuario] = useState(JSON.parse(localStorage.getItem('usuario')))
 
