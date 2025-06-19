@@ -21,7 +21,7 @@ function Trabajadores() {
             nombre: t.usuarios?.nombre || 'Nombre no disponible',
             servicio: t.servicio,
             tarifa: t.tarifa,
-            imagen: t.foto_url || 'https://via.placeholder.com/150'
+            imagen: t.usuarios?.foto_url || 'https://via.placeholder.com/150' // ← CORREGIDO
           }}
         />
       ))}

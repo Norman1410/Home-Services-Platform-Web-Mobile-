@@ -4,14 +4,16 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-
-// GET /usuarios/:id
+// GET /usuarios/:id (incluye relación con trabajadores)
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     const usuario = await prisma.usuarios.findUnique({
-      where: { id }, // UUID, no uses parseInt
+      where: { id },
+      include: {
+        trabajadores: true,
+      },
     });
 
     if (!usuario) {
@@ -25,19 +27,27 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
-
-// PUT /usuarios/:id
+// PUT /usuarios/:id (actualiza también trabajadores)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, foto_url } = req.body;
+  const { nombre, foto_url, servicio, tarifa, descripcion } = req.body;
 
   try {
     const usuario = await prisma.usuarios.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         nombre,
-        foto_url, // este campo debe estar en tu modelo Prisma
+        foto_url,
+      },
+    });
+
+    // Solo actualiza si el usuario tiene entrada en trabajadores
+    await prisma.trabajadores.updateMany({
+      where: { usuario_id: id },
+      data: {
+        servicio,
+        tarifa: parseFloat(tarifa),
+        descripcion,
       },
     });
 

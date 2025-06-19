@@ -9,7 +9,12 @@ router.get('/', async (req, res) => {
   try {
     const trabajadores = await prisma.trabajadores.findMany({
       include: {
-        usuarios: true
+        usuarios: {
+          select: {
+            nombre: true,
+            foto_url: true
+          }
+        }
       }
     });
     res.json(trabajadores);
@@ -24,7 +29,12 @@ router.get('/:id', async (req, res) => {
     const trabajador = await prisma.trabajadores.findUnique({
       where: { id },
       include: {
-        usuarios: true
+        usuarios: {
+          select: {
+            nombre: true,
+            foto_url: true
+          }
+        }
       }
     });
 

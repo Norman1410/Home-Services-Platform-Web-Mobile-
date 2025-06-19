@@ -3,11 +3,11 @@ import { supabase } from '../supabaseClient';
 
 export const subirImagenPerfil = async (archivo, userId) => {
   const fileExt = archivo.name.split('.').pop();
-  const fileName = `${userId}.${fileExt}`;
+  const fileName = `${userId}-${Date.now()}.${fileExt}`; // ⏱️ Nombre único
   const filePath = fileName;
 
   const { error } = await supabase.storage
-    .from('perfil') // nombre del bucket en Supabase Storage
+    .from('perfil')
     .upload(filePath, archivo, {
       upsert: true,
       contentType: archivo.type,

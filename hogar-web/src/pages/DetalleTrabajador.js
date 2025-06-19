@@ -22,10 +22,11 @@ function DetalleTrabajador() {
   return (
     <div className="p-6 max-w-lg mx-auto bg-white rounded-lg shadow-md text-center">
       <img
-        src={trabajador.foto_url || 'https://via.placeholder.com/150'}
+        src={trabajador.usuarios?.foto_url || 'https://via.placeholder.com/150'}
         alt={trabajador.usuarios?.nombre}
         className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
       />
+
       <h2 className="text-2xl font-bold text-gray-800">{trabajador.usuarios?.nombre}</h2>
       <p className="text-gray-500">{trabajador.servicio}</p>
       <p className="text-green-600 font-semibold mt-1 mb-4">₡{trabajador.tarifa}</p>

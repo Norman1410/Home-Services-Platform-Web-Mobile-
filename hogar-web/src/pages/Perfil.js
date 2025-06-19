@@ -7,30 +7,38 @@ const Perfil = () => {
   const [nombre, setNombre] = useState('');
   const [imagen, setImagen] = useState(null);
   const [preview, setPreview] = useState('');
+  const [servicio, setServicio] = useState('');
+  const [tarifa, setTarifa] = useState('');
+  const [descripcion, setDescripcion] = useState('');
 
-  // Obtener usuario desde localStorage
   const usuarioGuardado = JSON.parse(localStorage.getItem('usuario'));
   const usuarioId = usuarioGuardado?.id || null;
+  const esTrabajador = usuarioGuardado?.rol === 'trabajador';
 
   useEffect(() => {
-    if (!usuarioId) {
-      console.error('No se encontró el ID del usuario en localStorage');
-      return;
-    }
+    if (!usuarioId) return;
 
     const cargarPerfil = async () => {
       try {
         const res = await axios.get(`http://localhost:4000/api/usuarios/${usuarioId}`);
-        setUsuario(res.data);
-        setNombre(res.data.nombre);
-        setPreview(res.data.foto_url || '');
+        const data = res.data;
+        setUsuario(data);
+        setNombre(data.nombre);
+        setPreview(data.foto_url || '');
+
+        if (esTrabajador) {
+          const trabajador = data.trabajadores?.[0];
+          setServicio(trabajador?.servicio || '');
+          setTarifa(trabajador?.tarifa?.toString() || '');
+          setDescripcion(trabajador?.descripcion || '');
+        }
       } catch (err) {
         console.error('Error al cargar perfil:', err);
       }
     };
 
     cargarPerfil();
-  }, [usuarioId]);
+  }, [usuarioId, esTrabajador]);
 
   const handleImagenChange = (e) => {
     const file = e.target.files[0];
@@ -43,15 +51,17 @@ const Perfil = () => {
       let foto_url = usuario.foto_url;
 
       if (imagen) {
-        // Subir imagen al storage y obtener URL
         foto_url = await subirImagenPerfil(imagen, usuarioId);
       }
 
-      const res = await axios.put(`http://localhost:4000/api/usuarios/${usuarioId}`, {
-        nombre,
-        foto_url,
-      });
+      const payload = { nombre, foto_url };
+      if (esTrabajador) {
+        payload.servicio = servicio;
+        payload.tarifa = tarifa;
+        payload.descripcion = descripcion;
+      }
 
+      const res = await axios.put(`http://localhost:4000/api/usuarios/${usuarioId}`, payload);
       setUsuario(res.data);
       alert('Perfil actualizado correctamente');
     } catch (err) {
@@ -60,31 +70,81 @@ const Perfil = () => {
     }
   };
 
-  if (!usuario) return <p>Cargando perfil...</p>;
+  if (!usuario) return <p className="text-center mt-10">Cargando perfil...</p>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Perfil</h2>
-      <div>
-        <img
-          src={preview || 'https://via.placeholder.com/150'}
-          alt="Foto de perfil"
-          style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: '50%' }}
-        />
+    <div className="flex justify-center mt-10">
+      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
+        <h2 className="text-2xl font-semibold mb-6">Perfil</h2>
+
+        <div className="flex justify-center mb-4">
+          <img
+            src={preview || 'https://via.placeholder.com/150'}
+            alt="Foto de perfil"
+            className="w-32 h-32 object-cover rounded-full shadow"
+          />
+        </div>
+
+        <div className="mb-4 text-left">
+          <label className="block text-sm font-medium mb-1">Nombre:</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+          />
+        </div>
+
+        {esTrabajador && (
+          <>
+            <div className="mb-4 text-left">
+              <label className="block text-sm font-medium mb-1">Servicio:</label>
+              <input
+                type="text"
+                value={servicio}
+                onChange={(e) => setServicio(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              />
+            </div>
+
+            <div className="mb-4 text-left">
+              <label className="block text-sm font-medium mb-1">Tarifa (₡):</label>
+              <input
+                type="number"
+                value={tarifa}
+                onChange={(e) => setTarifa(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              />
+            </div>
+
+            <div className="mb-4 text-left">
+              <label className="block text-sm font-medium mb-1">Descripción:</label>
+              <textarea
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              />
+            </div>
+          </>
+        )}
+
+        <div className="mb-4 text-left">
+          <label className="block text-sm font-medium mb-1">Imagen nueva:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImagenChange}
+            className="w-full"
+          />
+        </div>
+
+        <button
+          onClick={handleGuardar}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Guardar cambios
+        </button>
       </div>
-      <div>
-        <label>Nombre:</label>
-        <input
-          type="text"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Imagen nueva:</label>
-        <input type="file" accept="image/*" onChange={handleImagenChange} />
-      </div>
-      <button onClick={handleGuardar}>Guardar cambios</button>
     </div>
   );
 };
