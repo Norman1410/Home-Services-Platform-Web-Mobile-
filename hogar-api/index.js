@@ -1,22 +1,25 @@
 // hogar-api/index.js
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-import authRoutes from './routes/auth.js'
-import { PrismaClient } from '@prisma/client'
-import trabajadoresRoutes from './routes/trabajadores.js'
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { PrismaClient } = require('@prisma/client');
 
-dotenv.config()
-const app = express()
-const prisma = new PrismaClient()
+const authRoutes = require('./routes/auth');
+const trabajadoresRoutes = require('./routes/trabajadores');
+const usuariosRouter = require('./routes/usuarios');
 
-app.use(cors())
-app.use(express.json())
-app.use('/api/trabajadores', trabajadoresRoutes)
+dotenv.config();
+const app = express();
+const prisma = new PrismaClient();
 
-app.use('/api/auth', authRoutes)
+app.use(cors());
+app.use(express.json());
 
-const PORT = process.env.PORT || 4000
+app.use('/api/auth', authRoutes);
+app.use('/api/trabajadores', trabajadoresRoutes);
+app.use('/api/usuarios', usuariosRouter);
+
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en puerto ${PORT}`)
-})
+  console.log(`Servidor backend corriendo en puerto ${PORT}`);
+});

@@ -1,9 +1,9 @@
 // hogar-api/routes/auth.js
-import express from 'express'
-import { PrismaClient } from '@prisma/client'
+const express = require('express');
+const { PrismaClient } = require('@prisma/client');
 
-const router = express.Router()
-const prisma = new PrismaClient()
+const router = express.Router();
+const prisma = new PrismaClient();
 
 // Registro
 router.post('/register', async (req, res) => {
@@ -15,13 +15,13 @@ router.post('/register', async (req, res) => {
     servicio,
     tarifa,
     descripcion
-  } = req.body
+  } = req.body;
 
   try {
     const existe = await prisma.usuarios.findUnique({
       where: { email: correo }
-    })
-    if (existe) return res.status(400).json({ error: 'Correo ya registrado' })
+    });
+    if (existe) return res.status(400).json({ error: 'Correo ya registrado' });
 
     const nuevoUsuario = await prisma.usuarios.create({
       data: {
@@ -30,9 +30,8 @@ router.post('/register', async (req, res) => {
         rol,
         nombre
       }
-    })
+    });
 
-    // Si es trabajador, registrar en tabla trabajadores
     if (rol === 'trabajador') {
       await prisma.trabajadores.create({
         data: {
@@ -41,34 +40,32 @@ router.post('/register', async (req, res) => {
           tarifa: parseInt(tarifa),
           descripcion
         }
-      })
+      });
     }
 
-    res.status(201).json(nuevoUsuario)
+    res.status(201).json(nuevoUsuario);
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Error al registrar usuario' })
+    console.error(err);
+    res.status(500).json({ error: 'Error al registrar usuario' });
   }
-})
-
-
+});
 
 // Login
 router.post('/login', async (req, res) => {
-  const { correo, contrasena } = req.body
+  const { correo, contrasena } = req.body;
   try {
     const usuario = await prisma.usuarios.findUnique({
-      where: { email: correo } // 🔁 CAMBIO AQUÍ
-    })
+      where: { email: correo }
+    });
 
     if (!usuario || usuario.contrase_a !== contrasena)
-      return res.status(401).json({ error: 'Credenciales incorrectas' })
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    res.json(usuario)
+    res.json(usuario);
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Error en el login' })
+    console.error(err);
+    res.status(500).json({ error: 'Error en el login' });
   }
-})
+});
 
-export default router
+module.exports = router;

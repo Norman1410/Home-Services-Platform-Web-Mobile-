@@ -1,42 +1,40 @@
-import express from 'express'
-import { PrismaClient } from '@prisma/client'
-//Backend trabajadores
-// Este archivo define las rutas para manejar los trabajadores en la API
-const router = express.Router()
-const prisma = new PrismaClient()
+// hogar-api/routes/trabajadores.js
+const express = require('express');
+const { PrismaClient } = require('@prisma/client');
+
+const router = express.Router();
+const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
   try {
     const trabajadores = await prisma.trabajadores.findMany({
       include: {
-        usuarios: true // incluir nombre del usuario
+        usuarios: true
       }
-    })
-    res.json(trabajadores)
+    });
+    res.json(trabajadores);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener trabajadores' })
+    res.status(500).json({ error: 'Error al obtener trabajadores' });
   }
-})
+});
 
 router.get('/:id', async (req, res) => {
-  const id = parseInt(req.params.id)
-
+  const id = parseInt(req.params.id);
   try {
     const trabajador = await prisma.trabajadores.findUnique({
       where: { id },
       include: {
         usuarios: true
       }
-    })
+    });
 
-    if (!trabajador) return res.status(404).json({ error: 'Trabajador no encontrado' })
+    if (!trabajador)
+      return res.status(404).json({ error: 'Trabajador no encontrado' });
 
-    res.json(trabajador)
+    res.json(trabajador);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener trabajador' })
+    res.status(500).json({ error: 'Error al obtener trabajador' });
   }
-})
+});
 
-
-
-export default router
+module.exports = router;
