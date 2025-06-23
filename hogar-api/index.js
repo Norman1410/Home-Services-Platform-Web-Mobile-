@@ -7,6 +7,9 @@ const { PrismaClient } = require('@prisma/client');
 const authRoutes = require('./routes/auth');
 const trabajadoresRoutes = require('./routes/trabajadores');
 const usuariosRouter = require('./routes/usuarios');
+const valoracionesRoutes = require('./routes/valoraciones');
+const ofertasRouter = require('./routes/ofertas');
+const aplicacionesRouter = require('./routes/aplicaciones');
 
 dotenv.config();
 const app = express();
@@ -18,6 +21,10 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/trabajadores', trabajadoresRoutes);
 app.use('/api/usuarios', usuariosRouter);
+app.use('/api/valoraciones', valoracionesRoutes); // ✅ AÑADIDO
+app.use('/api/ofertas', ofertasRouter);
+app.use('/api/aplicaciones', aplicacionesRouter);
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

@@ -27,10 +27,10 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /usuarios/:id (actualiza también trabajadores)
+// PUT /usuarios/:id (actualiza también trabajadores si aplica)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, foto_url, servicio, tarifa, descripcion } = req.body;
+  const { nombre, foto_url, telefono, servicio, tarifa, descripcion } = req.body;
 
   try {
     const usuario = await prisma.usuarios.update({
@@ -38,18 +38,21 @@ router.put('/:id', async (req, res) => {
       data: {
         nombre,
         foto_url,
+        telefono
       },
     });
 
-    // Solo actualiza si el usuario tiene entrada en trabajadores
-    await prisma.trabajadores.updateMany({
-      where: { usuario_id: id },
-      data: {
-        servicio,
-        tarifa: parseFloat(tarifa),
-        descripcion,
-      },
-    });
+    // Solo actualiza si todos los datos de trabajador están presentes
+    if (servicio && tarifa && descripcion) {
+      await prisma.trabajadores.updateMany({
+        where: { usuario_id: id },
+        data: {
+          servicio,
+          tarifa: parseInt(tarifa),
+          descripcion,
+        },
+      });
+    }
 
     res.json(usuario);
   } catch (error) {

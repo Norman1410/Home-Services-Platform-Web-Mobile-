@@ -12,7 +12,9 @@ router.get('/', async (req, res) => {
         usuarios: {
           select: {
             nombre: true,
-            foto_url: true
+            foto_url: true,
+            email: true, 
+            telefono: true
           }
         }
       }
@@ -32,7 +34,9 @@ router.get('/:id', async (req, res) => {
         usuarios: {
           select: {
             nombre: true,
-            foto_url: true
+            foto_url: true,
+            email: true, 
+            telefono: true
           }
         }
       }

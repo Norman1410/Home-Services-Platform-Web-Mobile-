@@ -8,22 +8,61 @@ datasource db {
 }
 
 model trabajadores {
-  id          Int       @id @default(autoincrement())
-  usuario_id  String?   @db.Uuid
-  servicio    String
-  tarifa      Int
-  descripcion String?
-  usuarios    usuarios? @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id           Int            @id @default(autoincrement())
+  usuario_id   String?        @db.Uuid
+  servicio     String
+  tarifa       Int
+  descripcion  String?
+  aplicaciones aplicaciones[]
+  usuarios     usuarios?      @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  valoraciones valoraciones[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model usuarios {
-  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  nombre       String
-  email        String         @unique
-  contrase_a   String         @map("contraseña")
-  rol          String
-  foto_url     String?        
-  creado_en    DateTime?      @default(now()) @db.Timestamp(6)
-  trabajadores trabajadores[]
+  id              String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  nombre          String
+  email           String            @unique
+  contrase_a      String            @map("contraseña")
+  rol             String
+  foto_url        String?
+  creado_en       DateTime?         @default(now()) @db.Timestamp(6)
+  telefono        String?
+  ofertas_trabajo ofertas_trabajo[]
+  trabajadores    trabajadores[]
+  valoraciones    valoraciones[]
+}
+
+model valoraciones {
+  id            Int          @id @default(autoincrement())
+  comentario    String
+  calificacion  Int
+  creado_en     DateTime?    @default(now()) @db.Timestamp(6)
+  trabajador_id Int
+  cliente_id    String       @db.Uuid
+  usuarios      usuarios     @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente")
+  trabajadores  trabajadores @relation(fields: [trabajador_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trabajador")
+}
+
+model ofertas_trabajo {
+  id                 Int            @id @default(autoincrement())
+  cliente_id         String?        @db.Uuid
+  titulo             String
+  descripcion        String
+  servicio_requerido String
+  ubicacion          String
+  fecha_creacion     DateTime?      @default(now()) @db.Timestamp(6)
+  estado             String?        @default("pendiente")
+  aplicaciones       aplicaciones[]
+  usuarios           usuarios?      @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model aplicaciones {
+  id               Int              @id @default(autoincrement())
+  oferta_id        Int?
+  trabajador_id    Int?
+  estado           String?          @default("pendiente")
+  fecha_aplicacion DateTime?        @default(now()) @db.Timestamp(6)
+  ofertas_trabajo  ofertas_trabajo? @relation(fields: [oferta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  trabajadores     trabajadores?    @relation(fields: [trabajador_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
