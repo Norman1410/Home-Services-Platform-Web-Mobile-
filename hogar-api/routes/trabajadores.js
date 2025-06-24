@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
           select: {
             nombre: true,
             foto_url: true,
-            email: true, 
+            email: true,
             telefono: true
           }
         }
@@ -21,6 +21,10 @@ router.get('/', async (req, res) => {
     });
     res.json(trabajadores);
   } catch (err) {
+    if (err.code === 'P1001') {
+      return res.status(503).json({ error: '⏳ La base de datos no está disponible. Intenta en unos segundos.' });
+    }
+    console.error('Error al obtener trabajadores:', err);
     res.status(500).json({ error: 'Error al obtener trabajadores' });
   }
 });
@@ -35,18 +39,23 @@ router.get('/:id', async (req, res) => {
           select: {
             nombre: true,
             foto_url: true,
-            email: true, 
+            email: true,
             telefono: true
           }
         }
       }
     });
 
-    if (!trabajador)
+    if (!trabajador) {
       return res.status(404).json({ error: 'Trabajador no encontrado' });
+    }
 
     res.json(trabajador);
   } catch (err) {
+    if (err.code === 'P1001') {
+      return res.status(503).json({ error: '⏳ Supabase no responde. Reintenta en breve.' });
+    }
+    console.error('Error al obtener trabajador:', err);
     res.status(500).json({ error: 'Error al obtener trabajador' });
   }
 });

@@ -35,14 +35,6 @@ function Home() {
     }
   };
 
-  if (usuario?.rol !== 'cliente') {
-    return (
-      <div className="text-center mt-10 text-red-600 text-xl">
-        Esta sección es solo para clientes.
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-xl mx-auto mt-10 p-4 bg-white shadow rounded">
       <h2 className="text-2xl font-bold mb-4 text-blue-700">Publicar una oferta de trabajo</h2>

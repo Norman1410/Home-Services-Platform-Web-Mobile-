@@ -4,7 +4,6 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// GET /usuarios/:id (incluye relación con trabajadores)
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -22,12 +21,14 @@ router.get('/:id', async (req, res) => {
 
     res.json(usuario);
   } catch (error) {
+    if (error.code === 'P1001') {
+      return res.status(503).json({ error: '⏳ Base de datos no disponible. Inténtalo en unos segundos.' });
+    }
     console.error('Error al obtener usuario:', error);
     res.status(500).json({ error: 'Error al obtener el perfil del usuario' });
   }
 });
 
-// PUT /usuarios/:id (actualiza también trabajadores si aplica)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre, foto_url, telefono, servicio, tarifa, descripcion } = req.body;
@@ -42,7 +43,6 @@ router.put('/:id', async (req, res) => {
       },
     });
 
-    // Solo actualiza si todos los datos de trabajador están presentes
     if (servicio && tarifa && descripcion) {
       await prisma.trabajadores.updateMany({
         where: { usuario_id: id },
@@ -56,6 +56,9 @@ router.put('/:id', async (req, res) => {
 
     res.json(usuario);
   } catch (error) {
+    if (error.code === 'P1001') {
+      return res.status(503).json({ error: '⏳ No se puede actualizar. La base de datos no responde.' });
+    }
     console.error(error);
     res.status(500).json({ error: 'No se pudo actualizar el perfil' });
   }

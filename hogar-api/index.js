@@ -30,3 +30,27 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en puerto ${PORT}`);
 });
+
+async function verificarConexionPrisma() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✅ Conexión a Supabase establecida correctamente.');
+  } catch (err) {
+    console.warn('⚠ No se pudo conectar a Supabase al iniciar:', err.message);
+  }
+}
+
+verificarConexionPrisma();
+
+
+
+// ⚠️ Manejador global para errores de Prisma (como conexión fallida a Supabase)
+process.on('unhandledRejection', (reason, promise) => {
+  if (reason?.code === 'P1001') {
+    console.warn('\n⚠ Supabase no responde (Error P1001). Verifica tu conexión o espera que se reactive.\n');
+  } else {
+    console.error('💥 Error inesperado no manejado:', reason);
+  }
+});
+
+

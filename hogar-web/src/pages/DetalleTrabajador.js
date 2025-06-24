@@ -18,7 +18,13 @@ function DetalleTrabajador() {
     axios
       .get(`http://localhost:4000/api/valoraciones/trabajador/${id}`)
       .then((res) => setValoraciones(res.data))
-      .catch((err) => console.error("Error al cargar valoraciones:", err));
+      .catch((err) => {
+        console.warn(
+          "⚠️ No se pudieron cargar valoraciones. Puede que Supabase no esté disponible:",
+          err.message
+        );
+        setValoraciones([]); // evita errores en render
+      });
   }, [id]);
 
   const enviarValoracion = async () => {

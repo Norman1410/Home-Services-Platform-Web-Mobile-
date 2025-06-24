@@ -65,6 +65,28 @@ function ListaOfertasCliente({ clienteId }) {
     }
   };
 
+  const aceptarAplicacion = async (id, ofertaId) => {
+    try {
+      await axios.patch(`http://localhost:4000/api/aplicaciones/${id}/aceptar`);
+      await cargarAplicaciones(ofertaId);
+      alert('✅ Trabajador aceptado');
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo aceptar la aplicación');
+    }
+  };
+
+  const rechazarAplicacion = async (id, ofertaId) => {
+    try {
+      await axios.patch(`http://localhost:4000/api/aplicaciones/${id}/rechazar`);
+      await cargarAplicaciones(ofertaId);
+      alert('❌ Aplicación rechazada');
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo rechazar la aplicación');
+    }
+  };
+
   return (
     <div className="mt-2 text-left">
       <h3 className="text-xl font-semibold mb-4">Mis ofertas publicadas</h3>
@@ -110,7 +132,6 @@ function ListaOfertasCliente({ clienteId }) {
                 </button>
               </div>
 
-              {/* Mostrar aplicaciones si existen */}
               {aplicacionesPorOferta[oferta.id] && (
                 <div className="mt-2 pl-2 border-t pt-2">
                   <h5 className="font-semibold text-sm mb-1">Aplicaciones:</h5>
@@ -134,6 +155,23 @@ function ListaOfertasCliente({ clienteId }) {
                                 </a>
                               </p>
                               <p className="text-xs text-gray-500">Estado: {app.estado}</p>
+
+                              {app.estado === 'pendiente' && (
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    onClick={() => aceptarAplicacion(app.id, oferta.id)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
+                                  >
+                                    Aceptar
+                                  </button>
+                                  <button
+                                    onClick={() => rechazarAplicacion(app.id, oferta.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                                  >
+                                    Rechazar
+                                  </button>
+                                </div>
+                              )}
                             </>
                           ) : (
                             <p className="text-red-600 italic">⚠️ Aplicación inválida o trabajador eliminado</p>

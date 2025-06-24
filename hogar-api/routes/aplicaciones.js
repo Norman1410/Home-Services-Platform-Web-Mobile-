@@ -82,4 +82,54 @@ router.patch('/:id/aceptar', async (req, res) => {
   }
 });
 
+// PATCH /api/aplicaciones/:id/rechazar
+router.patch('/:id/rechazar', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.aplicaciones.update({
+      where: { id: parseInt(id) },
+      data: { estado: 'rechazada' }
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error al rechazar aplicación:', err);
+    res.status(500).json({ error: 'No se pudo rechazar la aplicación' });
+  }
+});
+
+
+// DELETE /api/aplicaciones/:id
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.aplicaciones.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error al eliminar aplicación:', err);
+    res.status(500).json({ error: 'No se pudo eliminar la aplicación' });
+  }
+});
+
+// GET /api/aplicaciones
+router.get('/', async (req, res) => {
+  try {
+    const aplicaciones = await prisma.aplicaciones.findMany({
+      include: {
+        ofertas_trabajo: true // ← nombre correcto del modelo relacionado
+      },
+    });
+    res.json(aplicaciones);
+  } catch (err) {
+    console.error('Error al obtener aplicaciones:', err);
+    res.status(500).json({ error: 'Error al cargar aplicaciones' });
+  }
+});
+
+
 module.exports = router;
