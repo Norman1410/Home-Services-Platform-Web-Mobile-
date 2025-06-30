@@ -1,10 +1,9 @@
-// routes/valoraciones.js
 const express = require('express');
-const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const router = express.Router();
 const prisma = new PrismaClient();
 
-// Crear valoración
+// Crear nueva valoración
 router.post('/', async (req, res) => {
   const { comentario, calificacion, trabajador_id, cliente_id } = req.body;
 
@@ -13,29 +12,33 @@ router.post('/', async (req, res) => {
       data: {
         comentario,
         calificacion,
-        trabajador_id,
-        cliente_id,
-      },
+        trabajadores: {
+          connect: { id: parseInt(trabajador_id) }
+        },
+        usuarios: {
+          connect: { id: cliente_id }
+        }
+      }
     });
     res.json(nueva);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'No se pudo crear la valoración' });
+    res.status(500).json({ error: 'Error al crear valoración' });
   }
 });
 
 // Obtener valoraciones por trabajador
 router.get('/trabajador/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
     const valoraciones = await prisma.valoraciones.findMany({
-      where: { trabajador_id: parseInt(id) },
-      include: {
-        usuarios: {
-          select: { nombre: true }
-        }
+      where: {
+        trabajador_id: parseInt(id)
       },
-      orderBy: { creado_en: 'desc' }
+      include: {
+        usuarios: true
+      }
     });
     res.json(valoraciones);
   } catch (error) {

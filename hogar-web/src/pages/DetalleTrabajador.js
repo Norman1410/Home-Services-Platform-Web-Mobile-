@@ -28,24 +28,30 @@ function DetalleTrabajador() {
   }, [id]);
 
   const enviarValoracion = async () => {
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) {
+      alert('Debes iniciar sesión para dejar una valoración');
+      return;
+    }
+
     try {
-      await axios.post("http://localhost:4000/api/valoraciones", {
+      await axios.post('http://localhost:4000/api/valoraciones', {
         trabajador_id: id,
         calificacion: parseInt(calificacion),
         comentario,
+        cliente_id: usuario.id
       });
-      alert("Valoración enviada");
-      setComentario("");
+      alert('Valoración enviada');
+      setComentario('');
       setCalificacion(5);
-      const res = await axios.get(
-        `http://localhost:4000/api/valoraciones/trabajador/${id}`
-      );
+      const res = await axios.get(`http://localhost:4000/api/valoraciones/trabajador/${id}`);
       setValoraciones(res.data);
     } catch (error) {
-      alert("No se pudo enviar tu valoración");
-      console.error("Error al enviar valoración:", error);
+      console.error('Error al enviar valoración:', error);
+      alert('No se pudo enviar tu valoración');
     }
   };
+
 
   const promedio =
     valoraciones.length > 0
