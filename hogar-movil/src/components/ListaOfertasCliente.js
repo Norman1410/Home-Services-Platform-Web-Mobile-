@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Linking,
 } from 'react-native';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 function ListaOfertasCliente({ clienteId }) {
   const [ofertas, setOfertas] = useState([]);
@@ -106,13 +106,12 @@ function ListaOfertasCliente({ clienteId }) {
     }
   };
 
+  const navigation = useNavigation();
+
   const abrirFichaTrabajador = (id) => {
-    const url = `http://10.0.2.2:3000/trabajador/${id}`;
-    Linking.openURL(url).catch((err) => {
-      console.error('Error al abrir URL:', err);
-      Alert.alert('Error', 'No se pudo abrir la ficha del trabajador');
-    });
+    navigation.navigate('DetalleTrabajador', { id });
   };
+
 
   return (
     <ScrollView style={styles.container}>

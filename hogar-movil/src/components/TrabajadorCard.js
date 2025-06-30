@@ -1,15 +1,22 @@
 // components/TrabajadorCard.js
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 export default function TrabajadorCard({ data }) {
+  const navigation = useNavigation();
+
+  const abrirDetalle = () => {
+    navigation.navigate('DetalleTrabajador', { id: data.id });
+  };
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity onPress={abrirDetalle} style={styles.card}>
       <Image source={{ uri: data.imagen }} style={styles.image} />
       <Text style={styles.nombre}>{data.nombre}</Text>
       <Text style={styles.text}>{data.servicio}</Text>
       <Text style={styles.text}>₡{data.tarifa}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
