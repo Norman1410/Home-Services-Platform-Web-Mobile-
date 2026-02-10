@@ -33,9 +33,5 @@ The platform allows clients to publish job offers and workers to apply. Once a w
 - hogar-web: Web client application
 - hogar-movil: Mobile client application
 
-## Notes
-- This project was developed as part of a software design course.
-- The Supabase project may be paused, so the application might not be fully operational.
-- Environment variables are required to run the project locally.
 
 
