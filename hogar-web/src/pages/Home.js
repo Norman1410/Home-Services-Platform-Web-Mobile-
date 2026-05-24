@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { getStoredUser } from '../utils/session';
 
 function Home() {
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const usuario = getStoredUser();
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',

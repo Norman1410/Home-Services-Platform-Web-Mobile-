@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { getStoredUser } from '../utils/session';
 
 function HomeTrabajador() {
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const usuario = getStoredUser();
   const [aplicaciones, setAplicaciones] = useState([]);
 
   useEffect(() => {
