@@ -1,6 +1,14 @@
 // hogar-api/routes/auth.js
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
+const {
+  hashPassword,
+  logSecurityEvent,
+  maskEmail,
+  PUBLIC_USER_SELECT,
+  redactSensitiveData,
+  verifyPassword,
+} = require('../utils/security');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -18,6 +26,15 @@ router.post('/register', async (req, res) => {
   } = req.body;
 
   try {
+    if (!correo || !contrasena || !rol || !nombre) {
+      return res.status(400).json({ error: 'Correo, contraseña, rol y nombre son requeridos' });
+    }
+
+    logSecurityEvent(console, 'registro.intentado', {
+      correo: maskEmail(correo),
+      rol,
+    });
+
     const existe = await prisma.usuarios.findUnique({
       where: { email: correo }
     });
@@ -26,10 +43,11 @@ router.post('/register', async (req, res) => {
     const nuevoUsuario = await prisma.usuarios.create({
       data: {
         email: correo,
-        contrase_a: contrasena,
+        contrase_a: await hashPassword(contrasena),
         rol,
         nombre
-      }
+      },
+      select: PUBLIC_USER_SELECT,
     });
 
     if (rol === 'trabajador') {
@@ -43,7 +61,12 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    res.status(201).json(nuevoUsuario);
+    logSecurityEvent(console, 'registro.exitoso', {
+      usuario_id: nuevoUsuario.id,
+      rol: nuevoUsuario.rol,
+    });
+
+    res.status(201).json(redactSensitiveData(nuevoUsuario));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al registrar usuario' });
@@ -54,14 +77,51 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { correo, contrasena } = req.body;
   try {
+    if (!correo || !contrasena) {
+      return res.status(400).json({ error: 'Correo y contraseña son requeridos' });
+    }
+
+    logSecurityEvent(console, 'login.intentado', {
+      correo: maskEmail(correo),
+    });
+
     const usuario = await prisma.usuarios.findUnique({
       where: { email: correo }
     });
 
-    if (!usuario || usuario.contrase_a !== contrasena)
+    if (!usuario) {
+      logSecurityEvent(console, 'login.fallido', {
+        correo: maskEmail(correo),
+        motivo: 'usuario_no_encontrado',
+      });
       return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
 
-    res.json(usuario);
+    const resultado = await verifyPassword(contrasena, usuario.contrase_a);
+    if (!resultado.valid) {
+      logSecurityEvent(console, 'login.fallido', {
+        usuario_id: usuario.id,
+        motivo: 'credencial_incorrecta',
+      });
+      return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
+
+    if (resultado.needsRehash) {
+      await prisma.usuarios.update({
+        where: { id: usuario.id },
+        data: { contrase_a: await hashPassword(contrasena) },
+      });
+      logSecurityEvent(console, 'password.migrado_a_hash', {
+        usuario_id: usuario.id,
+      });
+    }
+
+    logSecurityEvent(console, 'login.exitoso', {
+      usuario_id: usuario.id,
+      rol: usuario.rol,
+    });
+
+    res.json(redactSensitiveData(usuario));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error en el login' });

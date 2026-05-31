@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
+const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
 const prisma = new PrismaClient();
 
 // Crear nueva valoración
@@ -37,10 +38,12 @@ router.get('/trabajador/:id', async (req, res) => {
         trabajador_id: parseInt(id)
       },
       include: {
-        usuarios: true
+        usuarios: {
+          select: PUBLIC_USER_SELECT
+        }
       }
     });
-    res.json(valoraciones);
+    res.json(redactSensitiveData(valoraciones));
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener valoraciones' });
