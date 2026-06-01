@@ -1,6 +1,10 @@
 // hogar-api/routes/auth.js
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
+const {
+  createSessionToken,
+  toSafeUser,
+} = require('../lib/security/session');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -43,7 +47,11 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    res.status(201).json(nuevoUsuario);
+    const usuario = toSafeUser(nuevoUsuario);
+    res.status(201).json({
+      usuario,
+      token: createSessionToken(usuario),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al registrar usuario' });
@@ -61,7 +69,11 @@ router.post('/login', async (req, res) => {
     if (!usuario || usuario.contrase_a !== contrasena)
       return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    res.json(usuario);
+    const usuarioSeguro = toSafeUser(usuario);
+    res.json({
+      usuario: usuarioSeguro,
+      token: createSessionToken(usuarioSeguro),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error en el login' });

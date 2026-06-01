@@ -22,14 +22,16 @@ const handleSubmit = async () => {
       correo: email,
       contrasena: password,
     });
-    await AsyncStorage.setItem('usuario', JSON.stringify(res.data));
+    const { usuario, token } = res.data;
+    await AsyncStorage.setItem('usuario', JSON.stringify(usuario));
+    await AsyncStorage.setItem('token', token);
 
-    if (res.data.rol === 'cliente') {
+    if (usuario.rol === 'cliente') {
       navigation.replace('Inicio');
-    } else if (res.data.rol === 'trabajador') {
+    } else if (usuario.rol === 'trabajador') {
       navigation.replace('Inicio');
     } else {
-      console.warn('❓ Rol desconocido:', res.data.rol);
+      console.warn('❓ Rol desconocido:', usuario.rol);
     }
   } catch (err) {
     const mensaje = err.response?.data?.error || 'Error al iniciar sesión';

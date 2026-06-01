@@ -19,6 +19,7 @@ export default function Navbar() {
 
   const cerrarSesion = async () => {
     await AsyncStorage.removeItem('usuario');
+    await AsyncStorage.removeItem('token');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],

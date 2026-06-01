@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { getStoredUser } from '../utils/session';
 
 function Home() {
-  const usuario = getStoredUser();
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
@@ -19,9 +17,13 @@ function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       await axios.post('http://localhost:4000/api/ofertas', {
         ...formData,
-        cliente_id: usuario.id,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setMensaje('✅ Oferta publicada exitosamente');
       setFormData({

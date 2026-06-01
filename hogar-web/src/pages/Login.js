@@ -19,10 +19,11 @@ const handleSubmit = async (e) => {
       contrasena: password
     })
 
-    const usuario = res.data
+    const { usuario, token } = res.data
 
     // Guardar en localStorage
     localStorage.setItem('usuario', JSON.stringify(usuario))
+    localStorage.setItem('token', token)
     window.dispatchEvent(new Event('storage')) // 🔁 ¡Clave para refrescar App!
 
     // Redirigir según rol
