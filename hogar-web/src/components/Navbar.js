@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { getStoredUser } from '../utils/session'
 
 function Navbar() {
   const navigate = useNavigate()
-  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const usuario = getStoredUser()
 
   const cerrarSesion = () => {
     localStorage.removeItem('usuario')

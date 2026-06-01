@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { getStoredUser } from '../utils/session';
 
 function Trabajos() {
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const usuario = getStoredUser();
   const [ofertas, setOfertas] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);

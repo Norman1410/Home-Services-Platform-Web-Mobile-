@@ -1,7 +1,8 @@
 import { Navigate } from 'react-router-dom'
+import { getStoredUser } from '../utils/session'
 
 function RutaProtegida({ children }) {
-  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const usuario = getStoredUser()
 
   if (!usuario) {
     return <Navigate to="/login" />

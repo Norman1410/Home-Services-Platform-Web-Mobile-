@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { getStoredUser } from "../utils/session";
 
 function DetalleTrabajador() {
   const { id } = useParams();
@@ -28,7 +29,7 @@ function DetalleTrabajador() {
   }, [id]);
 
   const enviarValoracion = async () => {
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const usuario = getStoredUser();
     if (!usuario) {
       alert('Debes iniciar sesión para dejar una valoración');
       return;
