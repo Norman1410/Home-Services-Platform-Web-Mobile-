@@ -2,16 +2,29 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const { toSafeUser } = require('../lib/security/session');
+
 const prisma = new PrismaClient();
 
+// GET /api/usuarios/:id
+// CORRECCIÓN AM-06: se usa select explícito para excluir contrase_a.
+// Antes: include sin select devolvía todos los campos incluyendo contrase_a en texto plano.
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     const usuario = await prisma.usuarios.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        rol: true,
+        foto_url: true,
+        telefono: true,
+        creado_en: true,
         trabajadores: true,
+        // contrase_a: omitido intencionalmente
       },
     });
 
@@ -29,6 +42,9 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PUT /api/usuarios/:id
+// CORRECCIÓN AM-06: se aplica toSafeUser() a la respuesta del update
+// para garantizar que contrase_a nunca llegue al cliente.
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre, foto_url, telefono, servicio, tarifa, descripcion } = req.body;
@@ -39,7 +55,7 @@ router.put('/:id', async (req, res) => {
       data: {
         nombre,
         foto_url,
-        telefono
+        telefono,
       },
     });
 
@@ -54,7 +70,7 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    res.json(usuario);
+    res.json(toSafeUser(usuario));
   } catch (error) {
     if (error.code === 'P1001') {
       return res.status(503).json({ error: '⏳ No se puede actualizar. La base de datos no responde.' });
