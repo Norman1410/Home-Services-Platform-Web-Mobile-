@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
 const prisma = new PrismaClient();
 
 // POST /api/aplicaciones/aplicar
@@ -37,13 +38,15 @@ router.get('/oferta/:id', async (req, res) => {
       include: {
         trabajadores: { // ✅ nombre correcto del modelo
           include: {
-            usuarios: true // ✅ incluir los datos del usuario
+            usuarios: {
+              select: PUBLIC_USER_SELECT
+            }
           }
         }
       }
     });
 
-    res.json(aplicaciones);
+    res.json(redactSensitiveData(aplicaciones));
   } catch (err) {
     console.error('Error al obtener aplicaciones:', err);
     res.status(500).json({ error: 'Error al cargar aplicaciones' });

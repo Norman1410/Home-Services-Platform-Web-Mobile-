@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { redactSensitiveData } from '../utils/security'
 //Frontend Login
 // Este componente maneja el inicio de sesión de los usuarios 
 function Login() {
@@ -19,11 +20,12 @@ const handleSubmit = async (e) => {
       contrasena: password
     })
 
-    const { usuario, token } = res.data
+    const usuario = redactSensitiveData(res.data.usuario || res.data)
+    const { token } = res.data
 
-    // Guardar en localStorage
+    // Guardar solo datos no sensibles en localStorage
     localStorage.setItem('usuario', JSON.stringify(usuario))
-    localStorage.setItem('token', token)
+    if (token) localStorage.setItem('token', token)
     window.dispatchEvent(new Event('storage')) // 🔁 ¡Clave para refrescar App!
 
     // Redirigir según rol

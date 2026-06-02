@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
 const { toSafeUser } = require('../lib/security/session');
 
 const prisma = new PrismaClient();
@@ -16,13 +17,7 @@ router.get('/:id', async (req, res) => {
     const usuario = await prisma.usuarios.findUnique({
       where: { id },
       select: {
-        id: true,
-        nombre: true,
-        email: true,
-        rol: true,
-        foto_url: true,
-        telefono: true,
-        creado_en: true,
+        ...PUBLIC_USER_SELECT,
         trabajadores: true,
         // contrase_a: omitido intencionalmente
       },
@@ -32,7 +27,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    res.json(usuario);
+    res.json(redactSensitiveData(usuario));
   } catch (error) {
     if (error.code === 'P1001') {
       return res.status(503).json({ error: '⏳ Base de datos no disponible. Inténtalo en unos segundos.' });
@@ -57,6 +52,7 @@ router.put('/:id', async (req, res) => {
         foto_url,
         telefono,
       },
+      select: PUBLIC_USER_SELECT,
     });
 
     if (servicio && tarifa && descripcion) {
@@ -70,7 +66,7 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    res.json(toSafeUser(usuario));
+    res.json(toSafeUser(redactSensitiveData(usuario)));
   } catch (error) {
     if (error.code === 'P1001') {
       return res.status(503).json({ error: '⏳ No se puede actualizar. La base de datos no responde.' });

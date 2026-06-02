@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { redactSensitiveData } from '../utils/security';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -22,9 +23,10 @@ const handleSubmit = async () => {
       correo: email,
       contrasena: password,
     });
-    const { usuario, token } = res.data;
+    const usuario = redactSensitiveData(res.data.usuario || res.data);
+    const { token } = res.data;
     await AsyncStorage.setItem('usuario', JSON.stringify(usuario));
-    await AsyncStorage.setItem('token', token);
+    if (token) await AsyncStorage.setItem('token', token);
 
     if (usuario.rol === 'cliente') {
       navigation.replace('Inicio');

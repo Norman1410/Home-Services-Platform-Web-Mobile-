@@ -1,6 +1,7 @@
 // routes/valoraciones.js
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
+const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
 const { requireAuth } = require('../middleware/auth');
 
 const prisma = new PrismaClient();
@@ -42,9 +43,13 @@ function buildValoracionesRouter(prismaClient = prisma) {
     try {
       const valoraciones = await prismaClient.valoraciones.findMany({
         where: { trabajador_id: parseInt(id) },
-        include: { usuarios: true }
+        include: {
+          usuarios: {
+            select: PUBLIC_USER_SELECT
+          }
+        }
       });
-      res.json(valoraciones);
+      res.json(redactSensitiveData(valoraciones));
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Error al obtener valoraciones' });
