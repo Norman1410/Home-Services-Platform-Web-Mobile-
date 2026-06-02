@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { getStoredUser } from "../utils/session";
 
 function DetalleTrabajador() {
   const { id } = useParams();
@@ -28,29 +29,33 @@ function DetalleTrabajador() {
   }, [id]);
 
   const enviarValoracion = async () => {
-    const usuario = JSON.parse(localStorage.getItem('usuario'));
-    if (!usuario) {
-      alert('Debes iniciar sesión para dejar una valoración');
-      return;
-    }
+  const token = localStorage.getItem('token');
 
-    try {
-      await axios.post('http://localhost:4000/api/valoraciones', {
-        trabajador_id: id,
-        calificacion: parseInt(calificacion),
-        comentario,
-        cliente_id: usuario.id
-      });
-      alert('Valoración enviada');
-      setComentario('');
-      setCalificacion(5);
-      const res = await axios.get(`http://localhost:4000/api/valoraciones/trabajador/${id}`);
-      setValoraciones(res.data);
-    } catch (error) {
-      console.error('Error al enviar valoración:', error);
-      alert('No se pudo enviar tu valoración');
-    }
-  };
+  if (!token) {
+    alert('Debes iniciar sesión para dejar una valoración');
+    return;
+  }
+
+  try {
+    await axios.post('http://localhost:4000/api/valoraciones', {
+      trabajador_id: id,
+      calificacion: parseInt(calificacion),
+      comentario
+      // cliente_id ya no se envía — el servidor lo toma del token
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    alert('Valoración enviada');
+    setComentario('');
+    setCalificacion(5);
+    const res = await axios.get(`http://localhost:4000/api/valoraciones/trabajador/${id}`);
+    setValoraciones(res.data);
+  } catch (error) {
+    console.error('Error al enviar valoración:', error);
+    alert('No se pudo enviar tu valoración');
+  }
+};
 
 
   const promedio =

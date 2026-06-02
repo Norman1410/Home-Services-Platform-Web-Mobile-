@@ -2,7 +2,6 @@ import { useState } from 'react';
 import axios from 'axios';
 
 function Home() {
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
@@ -18,9 +17,13 @@ function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       await axios.post('http://localhost:4000/api/ofertas', {
         ...formData,
-        cliente_id: usuario.id,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setMensaje('✅ Oferta publicada exitosamente');
       setFormData({

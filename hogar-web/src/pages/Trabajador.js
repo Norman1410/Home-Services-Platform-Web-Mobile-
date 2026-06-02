@@ -1,5 +1,7 @@
+import { getStoredUser } from '../utils/session'
+
 function Trabajador() {
-  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const usuario = getStoredUser()
 
   return (
     <div className="p-4">

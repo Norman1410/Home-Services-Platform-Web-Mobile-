@@ -1,13 +1,16 @@
 // routes/ofertas.js
 const express = require('express');
-const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
+const { requireAuth, requireRole } = require('../middleware/auth');
 const prisma = new PrismaClient();
 
+function buildOfertasRouter(prismaClient = prisma) {
+  const ofertasRouter = express.Router();
+
 // GET /api/ofertas
-router.get('/', async (req, res) => {
+ofertasRouter.get('/', async (req, res) => {
   try {
-    const ofertas = await prisma.ofertas_trabajo.findMany({
+    const ofertas = await prismaClient.ofertas_trabajo.findMany({
       where: {
         estado: 'pendiente', // opcional: puedes quitarlo si quieres mostrar todas
       },
@@ -22,11 +25,11 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/ofertas/cliente/:cliente_id
-router.get('/cliente/:cliente_id', async (req, res) => {
+ofertasRouter.get('/cliente/:cliente_id', async (req, res) => {
   const { cliente_id } = req.params;
 
   try {
-    const ofertas = await prisma.ofertas_trabajo.findMany({
+    const ofertas = await prismaClient.ofertas_trabajo.findMany({
       where: {
         cliente_id,
       },
@@ -43,12 +46,12 @@ router.get('/cliente/:cliente_id', async (req, res) => {
 });
 
 // PATCH /api/ofertas/:id
-router.patch('/:id', async (req, res) => {
+ofertasRouter.patch('/:id', async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
 
   try {
-    const actualizada = await prisma.ofertas_trabajo.update({
+    const actualizada = await prismaClient.ofertas_trabajo.update({
       where: { id: parseInt(id) },
       data: { estado },
     });
@@ -61,13 +64,13 @@ router.patch('/:id', async (req, res) => {
 
 
 // POST /api/ofertas
-router.post('/', async (req, res) => {
+ofertasRouter.post('/', requireAuth, requireRole('cliente'), async (req, res) => {
   try {
-    const { cliente_id, titulo, descripcion, servicio_requerido, ubicacion } = req.body;
+    const { titulo, descripcion, servicio_requerido, ubicacion } = req.body;
 
-    const nuevaOferta = await prisma.ofertas_trabajo.create({
+    const nuevaOferta = await prismaClient.ofertas_trabajo.create({
       data: {
-        cliente_id,
+        cliente_id: req.auth.userId,
         titulo,
         descripcion,
         servicio_requerido,
@@ -83,11 +86,11 @@ router.post('/', async (req, res) => {
 });
 
 // DELETE /api/ofertas/:id
-router.delete('/:id', async (req, res) => {
+ofertasRouter.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    await prisma.ofertas_trabajo.delete({
+    await prismaClient.ofertas_trabajo.delete({
       where: { id: parseInt(id) },
     });
     res.status(204).send(); // No Content
@@ -97,5 +100,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+  return ofertasRouter;
+}
 
-module.exports = router;
+module.exports = buildOfertasRouter();
+module.exports.buildOfertasRouter = buildOfertasRouter;

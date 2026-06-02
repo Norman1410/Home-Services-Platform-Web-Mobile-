@@ -11,15 +11,15 @@ import RutaProtegida from './components/RutaProtegida'
 import Trabajos from './pages/Trabajos'
 import HomeTrabajador from './pages/HomeTrabajador';
 import DetalleCliente from './pages/DetalleCliente';
+import { getStoredUser } from './utils/session';
 
 //Componente principal de la aplicación que maneja las rutas y el estado del usuario
 function App() {
-  const [usuario, setUsuario] = useState(JSON.parse(localStorage.getItem('usuario')))
+  const [usuario, setUsuario] = useState(getStoredUser())
 
   useEffect(() => {
     const actualizarSesion = () => {
-      const nuevoUsuario = JSON.parse(localStorage.getItem('usuario'))
-      setUsuario(nuevoUsuario)
+      setUsuario(getStoredUser())
     }
 
     window.addEventListener('storage', actualizarSesion)

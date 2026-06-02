@@ -33,9 +33,13 @@ export default function Home() {
     }
 
     try {
+      const token = await AsyncStorage.getItem('token');
       await axios.post('http://10.0.2.2:4000/api/ofertas', {
         ...formData,
-        cliente_id: usuario.id,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setMensaje('✅ Oferta publicada exitosamente');
       setFormData({

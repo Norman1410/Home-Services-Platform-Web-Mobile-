@@ -5,18 +5,25 @@ const {
   findProtectedUserFields,
   logSecurityEvent,
 } = require('../utils/accessControl');
+const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
+const { toSafeUser } = require('../lib/security/session');
 
 function createUsuariosRouter({ prisma = new PrismaClient(), logger = console } = {}) {
   const router = express.Router();
 
+  // GET /api/usuarios/:id
+  // CORRECCIÓN AM-06: se usa select explícito para excluir contrase_a.
+  // Antes: include sin select devolvía todos los campos incluyendo contrase_a en texto plano.
   router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
       const usuario = await prisma.usuarios.findUnique({
         where: { id },
-        include: {
+        select: {
+          ...PUBLIC_USER_SELECT,
           trabajadores: true,
+          // contrase_a: omitido intencionalmente
         },
       });
 
@@ -24,16 +31,19 @@ function createUsuariosRouter({ prisma = new PrismaClient(), logger = console } 
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
-      res.json(usuario);
+      return res.json(redactSensitiveData(usuario));
     } catch (error) {
       if (error.code === 'P1001') {
         return res.status(503).json({ error: '⏳ Base de datos no disponible. Inténtalo en unos segundos.' });
       }
       console.error('Error al obtener usuario:', error);
-      res.status(500).json({ error: 'Error al obtener el perfil del usuario' });
+      return res.status(500).json({ error: 'Error al obtener el perfil del usuario' });
     }
   });
 
+  // PUT /api/usuarios/:id
+  // CORRECCIÓN ADHA-02: se bloquean campos protegidos para evitar mass assignment.
+  // CORRECCIÓN AM-06: se aplica toSafeUser() a la respuesta del update.
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const protectedFields = findProtectedUserFields(req.body);
@@ -56,8 +66,9 @@ function createUsuariosRouter({ prisma = new PrismaClient(), logger = console } 
         data: {
           nombre,
           foto_url,
-          telefono
+          telefono,
         },
+        select: PUBLIC_USER_SELECT,
       });
 
       if (servicio && tarifa && descripcion) {
@@ -71,13 +82,13 @@ function createUsuariosRouter({ prisma = new PrismaClient(), logger = console } 
         });
       }
 
-      res.json(usuario);
+      return res.json(toSafeUser(redactSensitiveData(usuario)));
     } catch (error) {
       if (error.code === 'P1001') {
         return res.status(503).json({ error: '⏳ No se puede actualizar. La base de datos no responde.' });
       }
       console.error(error);
-      res.status(500).json({ error: 'No se pudo actualizar el perfil' });
+      return res.status(500).json({ error: 'No se pudo actualizar el perfil' });
     }
   });
 

@@ -4,6 +4,7 @@ const test = require('node:test');
 const express = require('express');
 const { createAuthRouter } = require('../routes/auth');
 const { createUsuariosRouter } = require('../routes/usuarios');
+const { isPasswordHash, verifyPassword } = require('../utils/security');
 
 function createLogger() {
   const entries = [];
@@ -153,11 +154,28 @@ test('POST /api/auth/register normaliza rol permitido y no asigna permisos extra
   });
 
   assert.equal(res.status, 201);
-  assert.deepEqual(calls.createdUser, {
+  assert.equal(calls.createdUser.email, 'trabajador@example.com');
+  assert.equal(calls.createdUser.rol, 'trabajador');
+  assert.equal(calls.createdUser.nombre, 'Trabajador');
+  assert.equal(isPasswordHash(calls.createdUser.contrase_a), true);
+  assert.deepEqual(await verifyPassword('secreto', calls.createdUser.contrase_a), {
+    valid: true,
+    needsRehash: false,
+  });
+  assert.equal(calls.createdUser.permisos, undefined);
+  assert.equal(calls.createdUser.isAdmin, undefined);
+  assert.deepEqual({
     email: 'trabajador@example.com',
-    contrase_a: 'secreto',
     rol: 'trabajador',
     nombre: 'Trabajador',
+    permisos: calls.createdUser.permisos,
+    isAdmin: calls.createdUser.isAdmin,
+  }, {
+    email: 'trabajador@example.com',
+    rol: 'trabajador',
+    nombre: 'Trabajador',
+    permisos: undefined,
+    isAdmin: undefined,
   });
   assert.deepEqual(calls.createdWorker, {
     usuario_id: 'usuario-1',
