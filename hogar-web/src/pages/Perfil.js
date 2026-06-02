@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { subirImagenPerfil } from '../api/storage';
 import ListaOfertasCliente from '../components/ListaOfertasCliente';
+import { getStoredUser } from '../utils/session';
 
 const Perfil = () => {
   const [usuario, setUsuario] = useState(null);
@@ -14,7 +15,7 @@ const Perfil = () => {
   const [descripcion, setDescripcion] = useState('');
   const [valoraciones, setValoraciones] = useState([]);
 
-  const usuarioGuardado = JSON.parse(localStorage.getItem('usuario'));
+  const usuarioGuardado = getStoredUser();
   const usuarioId = usuarioGuardado?.id || null;
   const esTrabajador = usuarioGuardado?.rol === 'trabajador';
 

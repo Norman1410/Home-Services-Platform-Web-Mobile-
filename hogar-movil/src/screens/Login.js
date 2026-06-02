@@ -23,8 +23,10 @@ const handleSubmit = async () => {
       correo: email,
       contrasena: password,
     });
-    const usuario = redactSensitiveData(res.data);
+    const usuario = redactSensitiveData(res.data.usuario || res.data);
+    const { token } = res.data;
     await AsyncStorage.setItem('usuario', JSON.stringify(usuario));
+    if (token) await AsyncStorage.setItem('token', token);
 
     if (usuario.rol === 'cliente') {
       navigation.replace('Inicio');

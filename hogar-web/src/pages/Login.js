@@ -20,10 +20,12 @@ const handleSubmit = async (e) => {
       contrasena: password
     })
 
-    const usuario = redactSensitiveData(res.data)
+    const usuario = redactSensitiveData(res.data.usuario || res.data)
+    const { token } = res.data
 
     // Guardar solo datos no sensibles en localStorage
     localStorage.setItem('usuario', JSON.stringify(usuario))
+    if (token) localStorage.setItem('token', token)
     window.dispatchEvent(new Event('storage')) // 🔁 ¡Clave para refrescar App!
 
     // Redirigir según rol

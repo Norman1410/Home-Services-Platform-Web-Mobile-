@@ -9,6 +9,10 @@ const {
   redactSensitiveData,
   verifyPassword,
 } = require('../utils/security');
+const {
+  createSessionToken,
+  toSafeUser,
+} = require('../lib/security/session');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -66,7 +70,11 @@ router.post('/register', async (req, res) => {
       rol: nuevoUsuario.rol,
     });
 
-    res.status(201).json(redactSensitiveData(nuevoUsuario));
+    const usuario = toSafeUser(redactSensitiveData(nuevoUsuario));
+    res.status(201).json({
+      usuario,
+      token: createSessionToken(usuario),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al registrar usuario' });
@@ -121,7 +129,11 @@ router.post('/login', async (req, res) => {
       rol: usuario.rol,
     });
 
-    res.json(redactSensitiveData(usuario));
+    const usuarioSeguro = toSafeUser(redactSensitiveData(usuario));
+    res.json({
+      usuario: usuarioSeguro,
+      token: createSessionToken(usuarioSeguro),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error en el login' });
