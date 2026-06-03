@@ -12,6 +12,9 @@ function getSessionSecret() {
   return process.env.SESSION_SECRET || 'change-this-session-secret-in-production';
 }
 
+function getSessionTTL() {
+  return parseInt(process.env.SESSION_TTL_SECONDS || '86400', 10); // default 24h
+}
 function signPayload(encodedPayload) {
   return crypto
     .createHmac('sha256', getSessionSecret())
@@ -20,12 +23,16 @@ function signPayload(encodedPayload) {
 }
 
 function createSessionToken(usuario) {
+  const now = Math.floor(Date.now() / 1000);
+  const ttl = getSessionTTL();
   const payload = {
     sub: usuario.id,
     rol: usuario.rol,
     email: usuario.email,
-    iat: Date.now(),
+    iat: now,
+    exp: now + ttl,
   };
+
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const signature = signPayload(encodedPayload);
 
@@ -54,7 +61,12 @@ function verifySessionToken(token) {
   }
 
   try {
-    return JSON.parse(base64UrlDecode(encodedPayload));
+    const payload = JSON.parse(base64UrlDecode(encodedPayload));
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      return null;
+    }
+    return payload;
   } catch (error) {
     return null;
   }

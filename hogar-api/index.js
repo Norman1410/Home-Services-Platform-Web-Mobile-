@@ -15,8 +15,16 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-app.use(cors());
+// Configurar CORS: sólo permitir orígenes listados en CLIENT_ORIGINS
+const allowedOrigins = (process.env.CLIENT_ORIGINS || 'http://localhost:3000').split(',');
 app.use(express.json());
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // herramientas como curl/postman sin Origin
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Origin not allowed'));
+  },
+}));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/trabajadores', trabajadoresRoutes);
