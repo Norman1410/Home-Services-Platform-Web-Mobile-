@@ -342,29 +342,44 @@ La aplicación web usaba `JSON.parse(localStorage.getItem('usuario'))` directame
 
 ### Angélica Dolly Harmon Arias
 
-> ⚠️ **Esta sección será completada por Angélica Harmon.**
+#### ADHA-01 — Almacenamiento e inserción de contraseñas en texto plano
 
-#### HAD-01 — [Nombre de la corrección]
+**Rama:** `feature/ADHA-01-contrasena-texto-plano`  
+**Archivos modificados:** `hogar-api/utils/auth.js`, `hogar-api/routes/auth.js`, `hogar-api/routes/usuarios.js`  
+**Clasificación:** CWE-256: Unprotected Storage of Credentials / OWASP A02:2021-Cryptographic Failures  
 
-**Rama:** `feature/HAD-01-...`  
-**Archivos modificados:** ...  
-**Clasificación:** ...
+_Descripción del problema y corrección aplicada:_  
+El sistema originalmente almacenaba las contraseñas en texto claro dentro de la base de datos PostgreSQL tras el registro, y las exponía explícitamente en los payloads JSON de respuesta de los endpoints de autenticación y lectura de perfiles. 
 
-_Descripción del problema y corrección aplicada._
+Para remediarlo, se implementó un mecanismo robusto de hashing utilizando la librería nativa `crypto.scrypt` combinada con la generación de sales (*salts*) aleatorias únicas por registro. Asimismo, se integró una función de sanitización recursiva (`redactSensitiveData`) en la capa del servidor para purgar e interceptar el campo de la credencial en estructuras complejas u objetos anidados antes de serializar cualquier respuesta HTTP, reduciendo a cero el radio de exposición del secreto en la red.
 
-**Tests:** ...
+**Tests:** `hogar-api/test/usuarios-password-exposure.test.js` — Pruebas unitarias de encriptación, validación de hashing, rechazo de credenciales incorrectas y sanitización integradas con éxito.
+- `✔ GET /api/usuarios/:id no debe exponer la contraseña`
+- `✔ PUT /api/usuarios/:id no debe exponer la contraseña tras actualizar`
+- `✔ hashPassword guarda un hash verificable y no el texto plano`
+- `✔ verifyPassword rechaza una contrasena incorrecta`
+- `✔ verifyPassword detecta credenciales antiguas en texto plano para migrarlas`
+- `✔ redactSensitiveData elimina contrasenas en respuestas anidadas`
 
 ---
 
-#### HAD-02 — [Nombre de la corrección]
+#### ADHA-02 — Mass Assignment en asignación de roles y permisos
 
-**Rama:** `feature/HAD-02-...`  
-**Archivos modificados:** ...  
-**Clasificación:** ...
+**Rama:** `feature/ADHA-02-mass-assignment-rol-permisos`  
+**Archivos modificados:** `hogar-api/routes/auth.js`, `hogar-api/routes/usuarios.js`  
+**Clasificación:** CWE-915: Improper Modification of Dynamically-Determined Object Attributes / OWASP A01:2021-Broken Access Control  
 
-_Descripción del problema y corrección aplicada._
+_Descripción del problema y corrección aplicada:_  
+Los endpoints de registro (`POST /api/auth/register`) y actualización de perfil (`PUT /api/usuarios/:id`) vinculaban masivamente el cuerpo de las solicitudes entrantes (`req.body`) de forma directa hacia el ORM (Prisma). Esto permitía que un atacante interceptara y manipulara los payloads HTTP para inyectar propiedades privilegiadas como `"rol": "admin"` o arreglos de `"permisos"`, logrando una escalación de privilegios vertical inmediata.
 
-**Tests:** ...
+La corrección se basó en el principio de diseño seguro de asignación explícita mediante una *allowlist* en el servidor. Se modificaron los controladores para desestructurar estrictamente los campos permitidos y reconstruir los objetos de transferencia de datos de forma controlada. Cualquier parámetro extendido de control de acceso enviado maliciosamente por el cliente es proactivamente ignorado y descartado antes de interactuar con la persistencia.
+
+**Tests:** `hogar-api/test/auth-mass-assignment.test.js` — Pruebas de integración destinadas al aseguramiento del modelo de control de acceso basado en roles (RBAC).
+- `✔ POST /api/auth/register rechaza un body manipulado con rol: admin`
+- `✔ POST /api/auth/register acepta trabajador normalizado pero no asigna permisos ni isAdmin`
+- `✔ PUT /api/usuarios/:id bloquea un intento de modificar rol y permisos`
+
+---
 
 ---
 
