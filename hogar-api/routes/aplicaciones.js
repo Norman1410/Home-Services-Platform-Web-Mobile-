@@ -2,13 +2,25 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { PUBLIC_USER_SELECT, redactSensitiveData } = require('../utils/security');
+const { requireAuth, requireRole } = require('../middleware/auth');
 const prisma = new PrismaClient();
 
 // POST /api/aplicaciones/aplicar
-router.post('/aplicar', async (req, res) => {
-  const { oferta_id, trabajador_id } = req.body;
+router.post('/aplicar', requireAuth, requireRole('trabajador'), async (req, res) => {
+  const { oferta_id } = req.body;
 
   try {
+    // trabajador_id se extrae del token, NO del body
+    const trabajador = await prisma.trabajadores.findFirst({
+      where: { usuario_id: req.auth.userId }
+    });
+
+    if (!trabajador) {
+      return res.status(403).json({ error: 'No eres un trabajador registrado' });
+    }
+
+    const trabajador_id = trabajador.id;
+
     const yaExiste = await prisma.aplicaciones.findFirst({
       where: { oferta_id, trabajador_id }
     });
@@ -36,7 +48,7 @@ router.get('/oferta/:id', async (req, res) => {
     const aplicaciones = await prisma.aplicaciones.findMany({
       where: { oferta_id: parseInt(id) },
       include: {
-        trabajadores: { // ✅ nombre correcto del modelo
+        trabajadores: {
           include: {
             usuarios: {
               select: PUBLIC_USER_SELECT
@@ -53,7 +65,6 @@ router.get('/oferta/:id', async (req, res) => {
   }
 });
 
-
 // PATCH /api/aplicaciones/:id/aceptar
 router.patch('/:id/aceptar', async (req, res) => {
   const { id } = req.params;
@@ -64,7 +75,6 @@ router.patch('/:id/aceptar', async (req, res) => {
       data: { estado: 'aceptada' }
     });
 
-    // Rechazar el resto
     await prisma.aplicaciones.updateMany({
       where: {
         oferta_id: aceptada.oferta_id,
@@ -102,7 +112,6 @@ router.patch('/:id/rechazar', async (req, res) => {
   }
 });
 
-
 // DELETE /api/aplicaciones/:id
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
@@ -124,7 +133,7 @@ router.get('/', async (req, res) => {
   try {
     const aplicaciones = await prisma.aplicaciones.findMany({
       include: {
-        ofertas_trabajo: true // ← nombre correcto del modelo relacionado
+        ofertas_trabajo: true
       },
     });
     res.json(aplicaciones);
@@ -133,6 +142,5 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Error al cargar aplicaciones' });
   }
 });
-
 
 module.exports = router;
