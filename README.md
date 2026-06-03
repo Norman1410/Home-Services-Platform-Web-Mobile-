@@ -385,26 +385,26 @@ La corrección se basó en el principio de diseño seguro de asignación explíc
 
 ### Nicole Alejandra Marín Vallejos
 
-> ⚠️ **Esta sección será completada por Nicole Marín.**
+#### NMV-01 — Aplicaciones a ofertas sin autenticación
 
-#### NMV-01 — [Nombre de la corrección]
+**Rama:** `feature/NAMV-01-autenticacion-aplicaciones`  
+**Archivos modificados:** `hogar-api/routes/aplicaciones.js`  
+**Clasificación:** OWASP A01:2021 Broken Access Control · CWE-284 Improper Access Control
 
-**Rama:** `feature/NMV-01-...`  
-**Archivos modificados:** ...  
-**Clasificación:** ...
+_Descripción del problema y corrección aplicada:_  
+El endpoint `POST /api/aplicaciones/aplicar` aceptaba solicitudes sin autenticación y confiaba en el `trabajador_id` enviado por el cliente. Se agregó `requireAuth` y `requireRole('trabajador')` en el router, y el `trabajador_id` ahora se determina exclusivamente desde `req.auth.userId` a partir del token firmado. Si el usuario autenticado no tiene un registro de trabajador asociado, la petición se rechaza con `403`.
 
-_Descripción del problema y corrección aplicada._
-
-**Tests:** ...
+**Tests:** Evidencia documentada en el informe técnico; la verificación confirma que el endpoint ya no acepta peticiones sin token y que no permite aplicar a ofertas usando un `trabajador_id` falso.
 
 ---
 
-#### NMV-02 — [Nombre de la corrección]
+#### NMV-02 — Política CORS permisiva sin restricción de origen
 
-**Rama:** `feature/NMV-02-...`  
-**Archivos modificados:** ...  
-**Clasificación:** ...
+**Rama:** `feature/NAMV-02-restrict-cors`  
+**Archivos modificados:** `hogar-api/index.js`  
+**Clasificación:** OWASP A05:2021 Security Misconfiguration · CWE-942 Permissive Cross-domain Policy
 
-_Descripción del problema y corrección aplicada._
+_Descripción del problema y corrección aplicada:_  
+El servidor tenía `app.use(cors())` sin configuración, lo que exponía la API a solicitudes cross-origin desde cualquier dominio. Se reemplazó por una política de lista blanca de orígenes permitidos, leída desde la variable de entorno `CORS_ALLOWED_ORIGINS`, y los orígenes no autorizados ya no reciben la cabecera `Access-Control-Allow-Origin`.
 
-**Tests:** ...
+**Tests:** Evidencia documentada en el informe técnico; se comprobó que un origen malicioso queda bloqueado y que `http://localhost:3000` sigue funcionando correctamente.
