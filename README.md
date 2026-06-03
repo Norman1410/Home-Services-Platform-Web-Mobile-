@@ -252,6 +252,73 @@ Invoke-RestMethod -Uri "http://localhost:4000/api/valoraciones" `
 # Resultado: cliente_id en la respuesta = ID real del token, no el 000...099
 ```
 
+### ADHA-01: Contraseñas en texto plano
+
+```powershell
+$url = "http://localhost:4000/api"
+$email = "test-$(Get-Random)@example.com"
+$pass = "TestPass123!"
+
+# Registrar
+$reg = Invoke-RestMethod -Uri "$url/auth/register" -Method Post `
+  -Body (@{correo=$email; contrasena=$pass; nombre="Test"} | ConvertTo-Json) `
+  -ContentType "application/json" -ErrorAction SilentlyContinue
+
+# Login y verificar si expone contraseña
+$login = Invoke-RestMethod -Uri "$url/auth/login" -Method Post `
+  -Body (@{correo=$email; contrasena=$pass} | ConvertTo-Json) `
+  -ContentType "application/json" -ErrorAction SilentlyContinue
+
+$json = $login | ConvertTo-Json
+if ($json -match "contrasena|password") {
+    Write-Host "[VULNERABLE] Contraseña expuesta" -ForegroundColor Red
+} else {
+    Write-Host "[✓] Parche aplicado" -ForegroundColor Green
+}
+```
+
+### ADHA-02: Mass assignment de rol/permisos
+
+```powershell
+$url = "http://localhost:4000/api"
+$email = "test-$(Get-Random)@example.com"
+$pass = "TestPass123!"
+
+# Intento 1: Registrarse como admin
+$reg = Invoke-RestMethod -Uri "$url/auth/register" -Method Post `
+  -Body (@{correo=$email; contrasena=$pass; nombre="Test"; rol="admin"} | ConvertTo-Json) `
+  -ContentType "application/json" -ErrorAction SilentlyContinue
+
+if ($reg.usuario.rol -eq "admin") {
+    Write-Host "[VULNERABLE] Rol admin asignado" -ForegroundColor Red
+} else {
+    Write-Host "[✓] Rol normalizado: $($reg.usuario.rol)" -ForegroundColor Green
+}
+
+# Intento 2: Modificar campos protegidos
+$uid = $reg.usuario.id
+$token = $reg.token
+$upd = Invoke-RestMethod -Uri "$url/usuarios/$uid" -Method Put `
+  -Body (@{rol="admin"} | ConvertTo-Json) `
+  -ContentType "application/json" `
+  -Headers @{"Authorization"="Bearer $token"} -ErrorAction SilentlyContinue
+
+if ($upd.usuario.rol -eq "admin") {
+    Write-Host "[VULNERABLE] Rol modificado a admin" -ForegroundColor Red
+} else {
+    Write-Host "[✓] Rol protegido" -ForegroundColor Green
+}
+```
+
+### Tests automatizados
+
+```powershell
+cd hogar-api
+npm test                                            # Suite completa
+npm test -- usuarios-password-exposure.test.js      # ADHA-01
+npm test -- ofertas-access-control.test.js          # ADHA-02
+```
+
 ---
 
 ## Aportes por estudiante
