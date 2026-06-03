@@ -252,7 +252,7 @@ Invoke-RestMethod -Uri "http://localhost:4000/api/valoraciones" `
 # Resultado: cliente_id en la respuesta = ID real del token, no el 000...099
 ```
 
-### ADHA-01: Contraseñas en texto plano
+### ADHA-01 — Contraseñas en texto plano
 
 ```powershell
 $url = "http://localhost:4000/api"
@@ -277,7 +277,7 @@ if ($json -match "contrasena|password") {
 }
 ```
 
-### ADHA-02: Mass assignment de rol/permisos
+### ADHA-02 — Mass assignment de rol/permisos
 
 ```powershell
 $url = "http://localhost:4000/api"
